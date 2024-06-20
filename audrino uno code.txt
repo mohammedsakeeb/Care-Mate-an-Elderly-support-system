@@ -1,0 +1,57 @@
+#include <Adafruit_MLX90614.h>
+#include <PulseSensorPlayground.h>
+
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+PulseSensorPlayground pulseSensor;
+
+const int PULSE_SENSOR_PIN = A0;  // Analog PIN where the PulseSensor is connected
+const int LED_PIN = 13;            // On-board LED PIN
+const int THRESHOLD = 550;         // Threshold for detecting a heartbeat
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  pinMode(10, INPUT); // Setup for leads off detection LO +
+  pinMode(11, INPUT); // Setup for leads off detection LO -
+
+  if (!mlx.begin()) {
+    Serial.println("Error connecting to MLX sensor. Check wiring.");
+    while (1);
+  }
+
+  pulseSensor.analogInput(PULSE_SENSOR_PIN);
+  pulseSensor.blinkOnPulse(LED_PIN);
+  pulseSensor.setThreshold(THRESHOLD);
+
+  if (pulseSensor.begin()) {
+    Serial.println("PulseSensor object created successfully!");
+  }
+}
+
+void loop() {
+  int currentBPM = pulseSensor.getBeatsPerMinute();
+
+  Serial.print("BPM: ");
+  Serial.println(currentBPM);
+
+  Serial.print("Ambient = ");
+  Serial.print(mlx.readAmbientTempC());
+  Serial.print("*C\tObject = ");
+  Serial.print(mlx.readObjectTempC());
+  Serial.println("*C");
+
+  Serial.print("Ambient = ");
+  Serial.print(mlx.readAmbientTempF());
+  Serial.print("*F\tObject = ");
+  Serial.print(mlx.readObjectTempF());
+  Serial.println("*F");
+
+  if (digitalRead(10) == 1 || digitalRead(11) == 1) {
+    Serial.println('!');
+  } else {
+    Serial.println(analogRead(A0));
+  }
+
+  delay(1000); // Adjust delay as needed
+}
